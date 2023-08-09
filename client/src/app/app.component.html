@@ -1,28 +1,46 @@
-<h1>Todo List</h1>
-<div>
-  <input [(ngModel)]="title" type="text" placeholder="Enter Todo Description" (keyup.enter)="addTodo()">
-  <button (click)="addTodo()" [disabled]="title.trim() === ''">Add Todo Item</button>
+<div class="container">
+  <div class="page-header">
+    <h1><mat-icon class="mat-icon-size" fontIcon="assignment_turned_in"></mat-icon> Todo List</h1>
+    <mat-divider></mat-divider>
+  </div>
+  <div class="input">
+    <input class="enter-input" [(ngModel)]="title" type="text" placeholder="Enter Todo Item" (keyup.enter)="addTodo()">
+    <button mat-flat-button [disabled]="title.trim() === ''" (click)="addTodo()" color="primary">Add Todo Item</button>
+    <button class="delete-button" mat-flat-button [disabled]="selectedTodos.length === 0" (click)="deleteTodo()" color="primary">
+      <a class="button-text">Delete</a>
+    </button>
+  </div>
+  <table mat-table [dataSource]="dataSource" matSort summary="Firecall Audit Report">
+      <ng-container *ngFor="let column of columns" [matColumnDef]="column.id">
+        <ng-container *ngIf="column.id !== 'select'">
+            <th mat-header-cell *matHeaderCellDef>{{ column.name }}</th>
+            <td mat-cell *matCellDef="let element">{{ element[column.id] }}</td>
+        </ng-container>
+        <ng-container *ngIf="column.id === 'select'">
+            <ng-container>
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let row">
+                    <mat-checkbox (click)="select(row)" color="primary"></mat-checkbox>
+                </td>
+            </ng-container>
+        </ng-container>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      <div class="form-fields">  
+        <ng-container matColumnDef="blank1">
+          <th mat-header-cell *matHeaderCellDef></th>
+        </ng-container>
+        <ng-container matColumnDef="title_filter">
+          <th mat-header-cell *matHeaderCellDef> 
+              <input class="filter" matInput (keyup)="applyFilter($event, 1)" placeholder="Search Todo Item">
+          </th>
+        </ng-container>
+        <ng-container matColumnDef="blank2">
+          <th mat-header-cell *matHeaderCellDef></th>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="filterColumns"></tr>\
+        <tr *matNoDataRow><td class="no-items" [attr.colspan]="displayedColumns.length">No items were able to be rerieved.</td></tr>
+      </div>
+  </table>
 </div>
-<br>
-<table>
-  <thead>
-    <tr>
-      <th>Description</th>
-      <th>Status</th>
-      <th>Update Status</th>
-      <th>Delete</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr *ngFor="let todoItem of todoItems">
-      <td>{{ todoItem.title }}</td>
-      <td>{{ todoItem.complete }}</td>
-      <td>
-        <button class="update" (click)="updateTodoStatus(todoItem.id)">Update Status</button>
-      </td>
-      <td>
-        <button class="delete" (click)="deleteTodo(todoItem.id)">Delete</button>
-      </td>
-    </tr>
-  </tbody>
-</table>

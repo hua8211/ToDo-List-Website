@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { HttpClient } from '@angular/common/http'
+import { MatTableDataSource } from '@angular/material/table';
 
 export interface ITodoItem {
   id: string
@@ -14,20 +15,39 @@ export interface ITodoItem {
 })
 
 export class AppComponent implements OnInit{
-  public id = ''
-  public title = ''
-  public complete = false
-  public deleteTodoId = ''
-  public todoItems: ITodoItem[] = []
-
   constructor(private httpClient: HttpClient) {}
-  
+  id = ''
+  title = ''
+  complete = false
+  deleteTodoId = ''
+  dataSource: any
+  todoItems: ITodoItem[] = []
+  displayedColumns: string[] = ['select',  'title'];
+  filterColumns: string[] = ['select', 'title_filter'];
+  selectedTodos: ITodoItem[] = [];
+  columns = [
+    {id: 'select', name: 'Blank'},
+    {id: 'id', name: 'ID'},
+    {id: 'title', name: 'Todo Item'},
+    {id: 'complete', name: 'Status'},
+  ];
+  filterValues: string[] = ['','',''];  
+
   async ngOnInit() {
     this.loadTodoItems()
   }
 
   async loadTodoItems() {
     this.todoItems = (await this.httpClient.get<ITodoItem[]>('http://localhost:8080/api/todos').toPromise()) ?? []
+    if (this.todoItems === undefined) {
+      this.todoItems = [];
+    }
+    this.dataSource = new MatTableDataSource(this.todoItems);
+    this.dataSource.filterPredicate = (data: ITodoItem, filter: string) => {
+      const filterValues = filter.split(',');
+      return data.id.toLowerCase().includes(filterValues[0]) &&              
+             data.title.toLowerCase().includes(filterValues[1])
+    };
   }
 
   async addTodo() {
@@ -37,28 +57,38 @@ export class AppComponent implements OnInit{
         title: this.title,
         complete: false
       }).toPromise()
-
       this.id = ''
       this.title = ''
       this.complete = false
+      this.loadTodoItems()
+    }
+  }
+
+  async updateTodoStatus(row: any){
+    await this.httpClient.put(`http://localhost:8080/api/todos/${row.id}`, { complete: !row.complete }).toPromise();
+  }
+
+  async deleteTodo(){
+    for (let temp of this.selectedTodos){
+      await this.httpClient.delete(`http://localhost:8080/api/todos/${temp.id}`, {}).toPromise();
+      this.loadTodoItems()
+    }
+    this.selectedTodos = []
+  }
   
-      this.loadTodoItems()
-    }
+  applyFilter(event: Event, index: number) {     
+    this.filterValues[index] = (event.target as HTMLInputElement).value.toLowerCase();
+    this.dataSource.filter = this.filterValues.join(',');
+    console.log(this.dataSource.filter)
   }
 
-  async updateTodoStatus(id: string) {
-    const todoItem = this.todoItems.find(item => item.id === id);
-    if (todoItem) {
-      const updatedStatus = !todoItem.complete;
-      await this.httpClient.put(`http://localhost:8080/api/todos/${id}`, { complete: updatedStatus }).toPromise();
-      this.loadTodoItems()
+  select(row: any) {
+    const index = this.selectedTodos.indexOf(row);
+    if (index > -1) {
+      this.selectedTodos.splice(index, 1);
+    } else {
+      this.selectedTodos.push(row);
     }
+    this.updateTodoStatus(row)
   }
-
-  async deleteTodo(id: string) { 
-    this.deleteTodoId = id
-    await this.httpClient.delete(`http://localhost:8080/api/todos/${this.deleteTodoId}`, {}).toPromise();
-    this.loadTodoItems()
-    this.deleteTodoId = ''
-   }
 }
