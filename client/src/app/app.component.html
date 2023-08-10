@@ -28,16 +28,13 @@
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
       <div class="form-fields">  
-        <ng-container matColumnDef="blank1">
+        <ng-container matColumnDef="blank">
           <th mat-header-cell *matHeaderCellDef></th>
         </ng-container>
         <ng-container matColumnDef="title_filter">
           <th mat-header-cell *matHeaderCellDef> 
               <input class="filter" matInput (keyup)="applyFilter($event, 1)" placeholder="Search Todo Item">
           </th>
-        </ng-container>
-        <ng-container matColumnDef="blank2">
-          <th mat-header-cell *matHeaderCellDef></th>
         </ng-container>
         <tr mat-header-row *matHeaderRowDef="filterColumns"></tr>\
         <tr *matNoDataRow><td class="no-items" [attr.colspan]="displayedColumns.length">No items were able to be rerieved.</td></tr>
